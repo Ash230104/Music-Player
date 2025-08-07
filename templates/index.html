@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music Player</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #2d2d2d;
+        color: #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding-top: 30px;
+        /* Padding for top buttons */
+        min-height: 100vh;
+      }
+
+      .player-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #3a3a3a;
+        padding: 20px;
+        width: 360px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .song-info {
+        margin: 15px 0;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .song-info .artist {
+        font-size: 14px;
+        font-weight: normal;
+        color: #aaa;
+        text-align: right;
+        display: block;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .controls button {
+        background: none;
+        border: none;
+        padding: 8px;
+        color: #61dafb;
+        /* blue icon color */
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      }
+
+      .controls button:hover {
+        transform: scale(1.2);
+      }
+
+      .controls svg {
+        width: 28px;
+        height: 28px;
+        stroke: currentColor;
+        fill: currentColor;
+      }
+
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        color: #61dafb;
+        background-color: #3a3a3a;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        font-size: 18px;
+      }
+
+      button:hover {
+        transform: scale(1.1);
+      }
+
+      audio {
+        margin-top: 20px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .add-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+
+      #add-main {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        font-size: 30px;
+        border-radius: 10%;
+        background-color: #1e1e1e;
+        color: #61dafb;
+        cursor: pointer;
+      }
+
+      #add-main:hover {
+        transform: scale(1.1);
+        color: #61dafb;
+        border-color: #61dafb;
+        box-shadow: 0 0 5px #61dafb;
+      }
+
+      #add-main svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .add-options {
+        display: none;
+        position: fixed;
+        top: 135px;
+        right: 20px;
+        background-color: none;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        pointer-events: none;
+      }
+
+      .add-options button {
+        background-color: #1e1e1e;
+        color: #61dafb;
+        border: none;
+        margin: 4px 0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: translateY(0px);
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+
+      .add-options button:hover {
+        transform: scale(1.1);
+        color: #61dafb;
+        border-color: #61dafb;
+        box-shadow: 0 0 5px #61dafb;
+      }
+
+      #add-options svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .add-options.show {
+        pointer-events: auto;
+      }
+
+      .add-options.show button:nth-child(1) {
+        transform: translateY(2px);
+        opacity: 1;
+      }
+
+      .add-options.show button:nth-child(2) {
+        transform: translateY(2px);
+        opacity: 1;
+      }
+
+      #show-queue-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #1e1e1e;
+        border: none;
+        cursor: pointer;
+        color: #61dafb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        transition: transform 0.2s ease;
+      }
+
+      #show-queue-btn:hover {
+        transform: scale(1.1);
+        color: #61dafb;
+        border-color: #61dafb;
+        box-shadow: 0 0 5px #61dafb;
+      }
+
+      #show-queue-btn svg {
+        width: 28px;
+        height: 28px;
+        stroke: currentColor;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+      }
+
+      .modal.show {
+        display: block !important;
+      }
+
+      .modal-content {
+        background-color: #3a3a3a;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      input[type="text"],
+      select,
+      input[type="range"] {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0 10px 0;
+        display: inline-block;
+        border: 1px solid #555;
+        border-radius: 4px;
+        box-sizing: border-box;
+        background-color: #1e1e1e;
+        color: #fff;
+      }
+
+      .slider-value {
+        color: #fff;
+        font-weight: bold;
+        text-align: center;
+        margin-top: -10px;
+      }
+
+      .song-list {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        background-color: #3a3a3a;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 375px;
+      }
+
+      .song-list ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .song-item {
+        padding: 7px;
+        border-bottom: 1px solid #555;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
+      }
+
+      .song-main {
+        font-size: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s ease;
+      }
+
+      .song-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+      }
+
+      .song-artist {
+        font-size: 0.75rem;
+        color: #bbb;
+        margin-top: -2px;
+      }
+
+      .song-main:hover {
+        transform: scale(1.03);
+      }
+
+      .song-meta {
+        font-size: 8px;
+        color: #bbb;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .song-actions {
+        margin-top: 5px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .song-item:last-child {
+        border-bottom: none;
+      }
+
+      .song-item.active {
+        background-color: #555;
+      }
+
+      .song-actions .remove-btn {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #f78c8c;
+      }
+
+      .song-actions .remove-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .song-actions-dropdown {
+        position: relative;
+      }
+
+      .more-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #ccc;
+      }
+
+      .dropdown-menu {
+        position: relative;
+        left: 5px;
+        top: 5px;
+        border-radius: 6px;
+        display: none;
+        flex-direction: row;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+        z-index: 999;
+      }
+
+      .dropdown-menu button {
+        background: none;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        font-size: 14px;
+        width: 100%;
+      }
+      
+      .remove-btn {
+        background: none;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+        color: #e57373 !important;
+        transition: transform 0.2s ease;
+      }
+
+      .remove-btn:hover {
+        color: #ef5350 !important;
+        transform: scale(1.1);
+      }
+
+      .remove-btn svg {
+        height: 22px;
+        width: 22px;
+        stroke: currentColor;
+        fill: none;
+      }
+
+      .queue-btn {
+        background-color: transparent;
+        color: #61dafb;
+        padding: 5px 10px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .queue-btn:hover {
+        transform: scale(1.25);
+      }
+
+      .edit-btn {
+        background-color: transparent;
+        color: #61dafb;
+        padding: 5px 10px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .edit-btn:hover {
+        transform: scale(1.25);
+      }
+
+      .edit-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .copy-btn {
+        background-color: transparent;
+        color: #61dafb;
+        padding: 5px 10px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .copy-btn:hover {
+        transform: scale(1.25);
+      }
+
+      .copy-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      /* Default style for repeat button */
+      #repeat-btn {
+        background: none;
+        border: none;
+        padding: 8px;
+        color: #61dafb;
+        cursor: pointer;
+        transition: transform 0.2s ease, color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #repeat-btn:hover {
+        transform: scale(1.1);
+        color: #61dafb;
+      }
+
+      #repeat-btn.active {
+        color: #61dafb;
+      }
+
+      #repeat-icon {
+        width: 28px;
+        height: 28px;
+        stroke: currentColor;
+        fill: currentColor;
+      }
+
+      .progress-container {
+        width: 100%;
+        max-width: 400px;
+        background-color: #555;
+        border-radius: 5px;
+        overflow: hidden;
+        height: 6px;
+        margin-top: 10px;
+        cursor: pointer;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background-color: #61dafb;
+        width: 0%;
+        transition: width 0.2s linear;
+      }
+
+      .time-display {
+        font-size: 14px;
+        color: #bbb;
+        margin-top: 5px;
+      }
+
+      #youtube-url {
+        flex: 1;
+        padding: 6px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: none;
+        background-color: #2d2d2d;
+        color: white;
+        width: 200px;
+        margin: 10px;
+        color: #fff;
+        outline: none;
+        transition: border-color 0.3s ease;
+      }
+
+      #youtube-url:focus {
+        border-color: #61dafb;
+        box-shadow: 0 0 5px #61dafb;
+      }
+
+      .youtube-download-row {
+        display: none;
+        position: fixed;
+        left: 5%;
+        top: 5%;
+        width: 80%;
+        height: 7%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 0 8px #61dafb;
+      }
+
+      .youtube-download-row input[type="text"] {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #555;
+        border-radius: 5px;
+        background-color: #1e1e1e;
+        color: #fff;
+        font-size: 16px;
+      }
+
+      .youtube-download-row button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        background-color: #61dafb;
+        color: #2d2d2d;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        font-size: 18px;
+      }
+
+      .youtube-download-row button:hover {
+        background-color: #4ca3d8;
+      }
+
+      #close-youtube-row {
+        padding: 6px;
+        background: none;
+        border: none;
+        color: #ffffff;
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      #cancel-delete-btn,
+      #confirm-delete-btn {
+        padding: 6px 12px;
+        margin-left: 8px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      #cancel-delete-btn {
+        background: #555;
+        color: white;
+      }
+
+      .toast {
+        visibility: hidden;
+        min-width: 220px;
+        max-width: 300px;
+        background-color: #333;
+        color: #fff;
+        text-align: left;
+        border-radius: 8px;
+        padding: 12px 16px;
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 999;
+        font-size: 14px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .toast.show {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .toast-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 2px;
+        color: #fff;
+      }
+
+      .toast-sub {
+        font-size: 12px;
+        color: #ccc;
+      }
+
+      .remove-queue-btn {
+        background: #444;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        padding: 2px 10px;
+        margin-left: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .remove-queue-btn:hover {
+        background: #e74c3c;
+      }
+
+      .spinner {
+        width: 22px;
+        height: 22px;
+        border: 3px solid #ccc;
+        border-top: 3px solid #61dafb;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      #visualizer-canvas {
+        width: 100%;
+        max-width: 400px;
+        height: 60px;
+        background-color: #1e1e1e;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="add-dropdown">
+      <button id="add-main" title="Add Audio">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="32"
+          viewBox="0 0 48 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <!-- Plus Sign (left side) -->
+          <line x1="10" y1="6" x2="10" y2="18" />
+          <line x1="4" y1="12" x2="16" y2="12" />
+
+          <!-- Music Note (thinner stroke, moved right) -->
+          <path
+            d="M28 3v12.55A4 4 0 1 0 30 19V6h4V3h-6z"
+            fill="none"
+            stroke="currentColor"
+          />
+        </svg>
+      </button>
+      <div class="add-options" id="add-options">
+        <button id="add-song-btn" title="Import Local Song">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+        </button>
+        <button id="youtube-import-btn" title="Import from YouTube">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="22"
+            height="22"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#FF0000"
+              d="M21.58 7.18a2.75 2.75 0 00-1.93-1.93C17.17 5 12 5 12 5s-5.17 0-7.65.25a2.75 2.75 0 00-1.93 1.93A28.4 28.4 0 002 12a28.4 28.4 0 00.42 4.82 2.75 2.75 0 001.93 1.93C6.83 19 12 19 12 19s5.17 0 7.65-.25a2.75 2.75 0 001.93-1.93A28.4 28.4 0 0022 12a28.4 28.4 0 00-.42-4.82z"
+            />
+            <!-- White play triangle -->
+            <path fill="#FFFFFF" d="M10 15l5-3-5-3v6z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="youtube-download-row">
+      <button id="close-youtube-row" title="Close">x</button>
+      <input type="text" id="youtube-url" placeholder="Paste YouTube URL" />
+      <button id="download-youtube-btn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="26"
+          height="26"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="17" width="18" height="4" rx="1" ry="1" />
+          <path d="M12 3v12" />
+          <polyline points="6 11 12 17 18 11" />
+        </svg>
+      </button>
+      <div class="spinner" id="yt-spinner" style="display: none"></div>
+    </div>
+
+    <button id="show-queue-btn" title="Show Queue">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+
+    <div class="player-controls">
+      <canvas id="visualizer-canvas" width="400" height="60"></canvas>
+      <div class="song-info">
+        <span id="current-song-name">No song playing...</span>
+        <span id="current-artist" class="artist"></span>
+      </div>
+      <div class="controls">
+        <button id="repeat-btn" title="Repeat">
+          <svg
+            id="repeat-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="28"
+            height="28"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <!-- default icon will be injected by JS -->
+          </svg>
+        </button>
+
+        <button id="play-btn" title="Play">
+          <svg
+            id="play-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            width="24"
+            height="24"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg
+            id="pause-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            width="24"
+            height="24"
+            style="display: none"
+          >
+            <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+          </svg>
+        </button>
+
+        <button id="next-btn" title="Next">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+          >
+            <path d="M7 6v12l10-6-10-6zm10 0v12h2V6h-2z" />
+          </svg>
+        </button>
+
+        <button id="shuffle-btn" title="Shuffle">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+          >
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="progress-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <div class="time-display">
+        <span id="current-time">0:00</span> /
+        <span id="total-duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="song-list" id="playlist">
+      <h3 id="playlist-title"></h3>
+      <ul id="song-list"></ul>
+    </div>
+
+    <div id="queueModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Queue</h2>
+        <div id="queue">
+          <ul id="queue-list"></ul>
+        </div>
+        <button id="clear-queue-btn" class="remove-btn" title="Clear Queue">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="26"
+            height="26"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            viewBox="0 0 24 24"
+          >
+            <!-- Trash can body -->
+            <g transform="translate(0, 0)">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+            </g>
+
+            <!-- Small X circle badge in top-right corner -->
+            <g transform="translate(14, -2)">
+              <circle cx="6" cy="6" r="3" fill="none" stroke="currentColor" />
+              <line x1="4.5" y1="4.5" x2="7.5" y2="7.5" />
+              <line x1="4.5" y1="7.5" x2="7.5" y2="4.5" />
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <audio id="audio-player"></audio>
+
+    <div id="importModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Import Song</h2>
+        <input type="file" id="file-input" accept="audio/*" />
+        <input
+          type="text"
+          id="song-name"
+          placeholder="Enter the name of the song"
+        />
+        <input
+          type="text"
+          id="artist-name"
+          placeholder="Enter the artist name"
+        />
+        <select id="genre">
+          <option value="">Select Genre</option>
+          <option value="pop">Pop</option>
+          <option value="rock">Rock</option>
+          <option value="jazz">Jazz</option>
+          <option value="classical">Classical</option>
+          <option value="hiphop">Hip Hop</option>
+        </select>
+        <select id="mood">
+          <option value="">Select Mood</option>
+          <option value="happy">Happy</option>
+          <option value="sad">Sad</option>
+          <option value="relaxed">Relaxed</option>
+          <option value="energetic">Energetic</option>
+          <option value="romantic">Romantic</option>
+        </select>
+        <select id="language">
+          <option value="">Select Language</option>
+          <option value="hindi">Hindi</option>
+          <option value="english">English</option>
+          <option value="sufi">Sufi</option>
+          <option value="others">Others</option>
+        </select>
+        <label for="tempo">Tempo/Loudness (1-10):</label>
+        <input type="range" id="tempo" min="1" max="10" value="5" />
+        <div class="slider-value" id="tempo-value">5</div>
+        <button id="import-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="youtubeModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Song Details</h2>
+
+        <input type="text" id="yt-song-name" placeholder="Song name" />
+        <input type="text" id="yt-artist-name" placeholder="Artist name" />
+
+        <select id="yt-genre">
+          <option value="">Select Genre</option>
+          <option value="pop">Pop</option>
+          <option value="rock">Rock</option>
+          <option value="jazz">Jazz</option>
+          <option value="classical">Classical</option>
+          <option value="hiphop">Hip Hop</option>
+        </select>
+
+        <select id="yt-mood">
+          <option value="">Select Mood</option>
+          <option value="happy">Happy</option>
+          <option value="sad">Sad</option>
+          <option value="relaxed">Relaxed</option>
+          <option value="energetic">Energetic</option>
+          <option value="romantic">Romantic</option>
+        </select>
+
+        <select id="yt-language">
+          <option value="">Select Language</option>
+          <option value="hindi">Hindi</option>
+          <option value="english">English</option>
+          <option value="sufi">Sufi</option>
+          <option value="others">Others</option>
+        </select>
+
+        <label for="yt-tempo">Tempo/Loudness (1-10):</label>
+        <input type="range" id="yt-tempo" min="1" max="10" value="5" />
+        <div class="slider-value" id="yt-tempo-value">5</div>
+
+        <button id="confirm-yt-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="close-edit-modal">&times;</span>
+        <h2>Edit Song Details</h2>
+        <input id="edit-song-name" placeholder="Song Name" />
+        <input id="edit-artist-name" placeholder="Artist Name" />
+        <select id="edit-genre">
+          <option value="">Select Genre</option>
+          <option value="pop">Pop</option>
+          <option value="rock">Rock</option>
+          <option value="jazz">Jazz</option>
+          <option value="classical">Classical</option>
+          <option value="hiphop">Hip Hop</option>
+        </select>
+        <select id="edit-mood">
+          <option value="">Select Mood</option>
+          <option value="happy">Happy</option>
+          <option value="sad">Sad</option>
+          <option value="relaxed">Relaxed</option>
+          <option value="energetic">Energetic</option>
+          <option value="romantic">Romantic</option>
+        </select>
+        <input type="range" id="edit-tempo" min="1" max="10" value="5" />
+        <span id="edit-tempo-value">5</span>
+        <select id="edit-language">
+          <option value="">Select Language</option>
+          <option value="hindi">Hindi</option>
+          <option value="english">English</option>
+          <option value="sufi">Sufi</option>
+          <option value="others">Others</option>
+        </select>
+        <button id="save-edit-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="deleteConfirmModal" class="modal">
+      <div class="modal-content" style="height: 25%">
+        <span class="close" id="close-delete-confirm">&times;</span>
+        <p>Are you sure you want to delete this song?</p>
+        <div style="text-align: right; margin-top: 20px">
+          <button id="cancel-delete-btn">Cancel</button>
+          <button
+            id="confirm-delete-btn"
+            style="background-color: crimson; color: white"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast">
+      <div class="toast-title">Song Name</div>
+      <div class="toast-sub">added to queue!!</div>
+    </div>
+
+    <div id="addToPlaylistModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="close-add-playlist-modal">&times;</span>
+        <h3>Add to Another Playlist</h3>
+        <select id="target-playlist-dropdown"></select>
+        <button id="confirm-add-to-playlist">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const audioPlayer = document.getElementById("audio-player");
+        const playBtn = document.getElementById("play-btn");
+        const nextBtn = document.getElementById("next-btn");
+        const shuffleBtn = document.getElementById("shuffle-btn");
+        const progressBar = document.getElementById("progress-bar");
+        const progressContainer = document.querySelector(".progress-container");
+        const currentSongName = document.getElementById("current-song-name");
+        const currentArtist = document.getElementById("current-artist");
+        const addSongBtn = document.getElementById("add-song-btn");
+        const showQueueBtn = document.getElementById("show-queue-btn");
+        const queueModal = document.getElementById("queueModal");
+        const closeQueueBtn = document.querySelector("#queueModal .close");
+        const clearQueueBtn = document.getElementById("clear-queue-btn");
+        const importModal = document.getElementById("importModal");
+        const closeImportBtn = document.querySelector("#importModal .close");
+        const fileInput = document.getElementById("file-input");
+        const songNameInput = document.getElementById("song-name");
+        const artistNameInput = document.getElementById("artist-name");
+        const genreSelect = document.getElementById("genre");
+        const moodSelect = document.getElementById("mood");
+        const tempoInput = document.getElementById("tempo");
+        const tempoValue = document.getElementById("tempo-value");
+        const languageSelect = document.getElementById("language");
+        const importBtn = document.getElementById("import-btn");
+        const songList = document.getElementById("song-list");
+        const queueList = document.getElementById("queue-list");
+        const currentTimeElem = document.getElementById("current-time");
+        const totalDurationElem = document.getElementById("total-duration");
+        const youtubeModal = document.getElementById("youtubeModal");
+        const ytSongInput = document.getElementById("yt-song-name");
+        const ytArtistInput = document.getElementById("yt-artist-name");
+        const ytGenre = document.getElementById("yt-genre");
+        const ytMood = document.getElementById("yt-mood");
+        const ytLanguage = document.getElementById("yt-language");
+        const ytTempo = document.getElementById("yt-tempo");
+        const ytTempoValue = document.getElementById("yt-tempo-value");
+        const confirmYtBtn = document.getElementById("confirm-yt-btn");
+        const closeYtModal = youtubeModal.querySelector(".close");
+        const downloadBtn = document.getElementById("download-youtube-btn");
+        const spinner = document.getElementById("yt-spinner");
+        const playIcon = document.getElementById("play-icon");
+        const pauseIcon = document.getElementById("pause-icon");
+        const repeatBtn = document.getElementById("repeat-btn");
+        const repeatIcon = document.getElementById("repeat-icon");
+        const addDropdown = document.querySelector(".add-dropdown");
+        const addOptions = document.querySelector(".add-options");
+        const addMainBtn = document.getElementById("add-main");
+        const ytInlineRow = document.querySelector(".youtube-download-row");
+        const ytUrlInput = document.getElementById("youtube-url");
+        const closeYoutubeRowBtn = document.getElementById("close-youtube-row");
+        const editModal = document.getElementById("editModal");
+        const closeEditModal = document.getElementById("close-edit-modal");
+        const saveEditBtn = document.getElementById("save-edit-btn");
+        const editTempoSlider = document.getElementById("edit-tempo");
+        const editTempoValue = document.getElementById("edit-tempo-value");
+        const deleteConfirmModal =document.getElementById("deleteConfirmModal");
+        const closeDeleteConfirm = document.getElementById("close-delete-confirm");
+        const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
+        const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+        const addToPlaylistModal =document.getElementById("addToPlaylistModal");
+        const closeAddPlaylistModal = document.getElementById("close-add-playlist-modal");
+        const confirmAddToPlaylistBtn = document.getElementById("confirm-add-to-playlist");
+        const playlistDropdown = document.getElementById("target-playlist-dropdown");
+
+        let songToCopy = null;
+
+        const repeatPath = `
+          <polyline points="17 1 21 5 17 9" />
+          <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+          <polyline points="7 23 3 19 7 15" />
+          <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+        `;
+
+        const repeatOnePath = `
+          <polyline points="17 1 21 5 17 9" />
+          <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+          <polyline points="7 23 3 19 7 15" />
+          <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+          <text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor" font-family="Arial">1</text>
+        `;
+
+        const canvas = document.getElementById("visualizer-canvas");
+        const ctx = canvas.getContext("2d");
+        const audioCtx = new (window.AudioContext ||
+          window.webkitAudioContext)();
+        const analyser = audioCtx.createAnalyser();
+        const source = audioCtx.createMediaElementSource(audioPlayer);
+
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        analyser.fftSize = 128;
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const moodScale = {
+          sad: 1,
+          relaxed: 3,
+          romantic: 5,
+          happy: 7,
+          energetic: 9,
+        };
+
+        const colorThemes = [
+          { name: "Sky", from: "#00c6ff", to: "#0072ff" },
+          { name: "Sunset", from: "#ff6a00", to: "#ee0979" },
+          { name: "Ocean", from: "#43cea2", to: "#185a9d" },
+          { name: "Purple Rain", from: "#a18cd1", to: "#fbc2eb" },
+          { name: "Fire", from: "#f12711", to: "#f5af19" },
+          { name: "Lime", from: "#a8ff78", to: "#78ffd6" },
+        ];
+
+        let db;
+        let songs = [];
+        let queue = [];
+        let isRepeat = false;
+        let waveTick = 0;
+        let currentThemeIndex = 0;
+        let editingSongId = null;
+
+        function getQueryParam(name) {
+          const url = new URL(window.location.href);
+          return url.searchParams.get(name);
+        }
+
+        const playlistName = getQueryParam("playlist") || "default";
+
+        document.getElementById(
+          "playlist-title"
+        ).textContent = `Playlist: ${playlistName}`;
+
+        function draw() {
+          requestAnimationFrame(draw);
+
+          analyser.getByteFrequencyData(dataArray);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          const barWidth = (canvas.width / bufferLength) * 1.8;
+          let x = 0;
+          waveTick += 0.03;
+          const theme = colorThemes[currentThemeIndex];
+          for (let i = 0; i < bufferLength; i++) {
+            const waveOffset = Math.sin(waveTick + i * 0.4) * 10;
+            let barHeight = dataArray[i] / 6 + waveOffset;
+            barHeight = Math.max(barHeight, 2);
+            const gradient = ctx.createLinearGradient(
+              0,
+              canvas.height,
+              0,
+              canvas.height - barHeight
+            );
+            gradient.addColorStop(0, theme.from);
+            gradient.addColorStop(1, theme.to);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+            x += barWidth + 1;
+          }
+        }
+
+        let visualizing = false;
+        audioPlayer.addEventListener("play", () => {
+          if (!visualizing) {
+            audioCtx.resume(); // Required in some browsers
+            draw();
+            visualizing = true;
+          }
+        });
+
+        function updateRepeatIcon() {
+          repeatIcon.innerHTML = isRepeat ? repeatOnePath : repeatPath;
+        }
+
+        repeatBtn.addEventListener("click", () => {
+          isRepeat = !isRepeat;
+          repeatBtn.classList.toggle("active", isRepeat);
+          updateRepeatIcon();
+        });
+
+        updateRepeatIcon();
+
+        function formatTime(sec) {
+          const m = Math.floor(sec / 60);
+          const s = Math.floor(sec % 60);
+          return `${m}:${s < 10 ? "0" + s : s}`;
+        }
+
+        audioPlayer.addEventListener("loadedmetadata", () => {
+          totalDurationElem.textContent = formatTime(audioPlayer.duration);
+        });
+
+        audioPlayer.addEventListener("timeupdate", () => {
+          if (audioPlayer.duration) {
+            const progress =
+              (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            currentTimeElem.textContent = formatTime(audioPlayer.currentTime);
+          }
+        });
+
+        editTempoSlider.addEventListener("input", () => {
+          editTempoValue.textContent = editTempoSlider.value;
+        });
+
+        // Click to seek functionality
+        progressContainer.addEventListener("click", (e) => {
+          const width = progressContainer.clientWidth;
+          const clickX = e.offsetX;
+          const duration = audioPlayer.duration;
+          if (duration) {
+            audioPlayer.currentTime = (clickX / width) * duration;
+          }
+        });
+
+        function openDb() {
+          const request = indexedDB.open("musicPlayerDB", 1);
+          request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            db.createObjectStore("songs", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+          };
+          request.onsuccess = (event) => {
+            db = event.target.result;
+            loadSongs();
+            loadQueue();
+          };
+          request.onerror = (event) => {
+            console.error("Error opening IndexedDB:", event.target.errorCode);
+          };
+        }
+
+        function saveSong(song) {
+          song.playlist = playlistName; // attach current playlist
+          const transaction = db.transaction("songs", "readwrite");
+          const store = transaction.objectStore("songs");
+          store.add(song);
+          transaction.oncomplete = () => loadSongs();
+          transaction.onerror = (event) =>
+            console.error("Error saving song:", event.target.errorCode);
+        }
+
+        function deleteSong(id) {
+          const transaction = db.transaction("songs", "readwrite");
+          const store = transaction.objectStore("songs");
+          store.delete(id);
+          transaction.oncomplete = () => loadSongs();
+          transaction.onerror = (event) =>
+            console.error("Error deleting song:", event.target.errorCode);
+        }
+
+        function loadSongs() {
+          const transaction = db.transaction("songs", "readonly");
+          const store = transaction.objectStore("songs");
+          const request = store.getAll();
+          request.onsuccess = () => {
+            songs = request.result.filter(
+              (song) => song.playlist === playlistName
+            );
+            updateSongList();
+          };
+          request.onerror = (event) =>
+            console.error("Error loading songs:", event.target.errorCode);
+        }
+
+        function saveQueue() {
+          localStorage.setItem("queue", JSON.stringify(queue));
+        }
+
+        function loadQueue() {
+          queue = JSON.parse(localStorage.getItem("queue")) || [];
+          updateQueue();
+        }
+
+        function updateSongList() {
+          songList.innerHTML = "";
+          songs.forEach((song, index) => {
+            const songItem = document.createElement("li");
+            songItem.classList.add("song-item");
+            const genre = song.genre || "Unknown";
+            const mood = song.mood || "Unknown";
+            const tempo = song.tempo || "-";
+            const language = song.language || "Unknown";
+
+            songItem.innerHTML = `
+                <div class="song-main" title="Play This Now!!">
+                  <div class="song-title">${song.name}</div>
+                
+                  <div class="song-actions" style="display: flex; gap: 10px; align-items: center;">
+                    <button class="more-btn" title="Options">⋮</button>
+                  </div>
+
+                </div>
+                <div class="song-artist">${song.artist}</div>
+                <div class="song-meta">
+                  Genre: ${genre} | Mood: ${mood} | Tempo: ${tempo} | Lang: ${language}
+                </div>
+
+                  <div class="dropdown-menu">
+
+                    <button class="queue-btn" data-id="${song.id}" title="Add to Queue">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <!-- Stack bars -->
+                        <line x1="3" y1="6" x2="17" y2="6" />
+                        <line x1="3" y1="12" x2="17" y2="12" />
+                        <line x1="3" y1="18" x2="13" y2="18" />
+                        <!-- Plus sign above bottom bar -->
+                        <line x1="16" y1="14.5" x2="16" y2="17.5" />
+                        <line x1="14.5" y1="16" x2="17.5" y2="16" />
+                      </svg>
+                    </button>
+
+                    <button class="edit-btn" title="Edit Song">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                      viewBox="0 0 24 24">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                      </svg>
+                    </button>
+
+                    <button class="copy-btn" title="Add to Another Playlist">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <path d="M8 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                      </svg>
+                    </button>
+
+                    <button class="remove-btn" title="Delete">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                      </svg>
+                    </button>
+
+                  </div>
+              `;
+
+            const queueBtn = songItem.querySelector(".queue-btn");
+            const removeBtn = songItem.querySelector(".remove-btn");
+            const editBtn = songItem.querySelector(".edit-btn");
+            const copyBtn = songItem.querySelector(".copy-btn");
+            const dropdown = songItem.querySelector(".dropdown-menu");
+            const moreBtn = songItem.querySelector(".more-btn");
+            
+            moreBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              // Close other open menus
+              document.querySelectorAll(".dropdown-menu").forEach(menu => {
+                if (menu !== dropdown) menu.style.display = "none";
+              });
+              dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
+            });
+
+            document.addEventListener("click", (e) => {
+              if (!e.target.closest(".song-actions-dropdown")) {
+                dropdown.style.display = "none";
+              }
+            });
+
+            queueBtn.addEventListener("click", (e) => {
+              e.stopPropagation(); // prevent triggering song load
+              queue.push(song);
+              updateQueue();
+              saveQueue();
+              dropdown.style.display = "none";
+              showToast(song.name, "added to queue");
+            });
+
+            removeBtn.addEventListener("click", (e) => {
+              e.stopPropagation(); // prevent triggering song load
+              songToDeleteId = song.id;
+              deleteConfirmModal.style.display = "flex";
+              dropdown.style.display = "none";
+            });
+
+            editBtn.addEventListener("click", (e) => {
+              console.log("Edit button clicked");
+              e.stopPropagation(); // Prevent playing song
+              openEditModal(song); // Pass the song object
+              dropdown.style.display = "none";
+            });
+
+            copyBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              songToCopy = song;
+              openAddToPlaylistModal();
+              dropdown.style.display = "none";
+            });
+
+            songItem.addEventListener("click", (e) => {
+              if (
+                !e.target.closest(".remove-btn") &&
+                !e.target.closest(".queue-btn") &&
+                !e.target.closest(".edit-btn")
+              ) {
+                loadSong(index);
+              }
+            });
+
+            songList.appendChild(songItem);
+          });
+        }
+
+        function updateQueue() {
+          queueList.innerHTML = "";
+
+          if (queue.length === 0) {
+            const emptyMsg = document.createElement("li");
+            emptyMsg.classList.add("empty-queue-msg");
+            emptyMsg.textContent =
+              "Your queue is empty. Add songs to get started.";
+            emptyMsg.style.textAlign = "center";
+            emptyMsg.style.padding = "10px";
+            emptyMsg.style.color = "#999";
+            emptyMsg.style.fontStyle = "italic";
+            queueList.appendChild(emptyMsg);
+            return;
+          }
+
+          queue.forEach((song, idx) => {
+            const item = document.createElement("li");
+            item.classList.add("song-item");
+            item.innerHTML = `
+                <div class="song-main">
+                  <div class="song-title">${song.name}</div>
+                  <div class="song-artist">${song.artist}</div>
+                  <button class="remove-queue-btn" data-index="${idx}" title="Remove from Queue">−</button>
+                </div>
+                <div class="song-meta">
+                  Genre: ${song.genre || ""} | Mood: ${
+              song.mood || ""
+            } | Tempo: ${song.tempo || ""} | Lang: ${song.language || ""}
+                </div>
+              `;
+            queueList.appendChild(item);
+          });
+          document.querySelectorAll(".remove-queue-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              const index = parseInt(btn.dataset.index);
+              queue.splice(index, 1);
+              updateQueue();
+              saveQueue();
+            });
+          });
+        }
+
+        function loadSong(index) {
+          if (songs[index]) {
+            currentThemeIndex =
+              Math.abs(songs[index].name.charCodeAt(0)) % colorThemes.length;
+            const blob = songs[index].file;
+            const url = URL.createObjectURL(blob);
+            audioPlayer.src = url;
+
+            currentSongName.textContent = songs[index].name;
+            currentArtist.textContent = songs[index].artist;
+
+            // Wait for metadata to load before playing
+            audioPlayer.addEventListener("loadedmetadata", function onMeta() {
+              totalDurationElem.textContent = formatTime(audioPlayer.duration);
+              currentTimeElem.textContent = formatTime(0);
+              audioPlayer.removeEventListener("loadedmetadata", onMeta); // clean up
+              audioPlayer.play();
+            });
+          }
+        }
+
+        audioPlayer.addEventListener("ended", () => {
+          if (isRepeat) {
+            audioPlayer.currentTime = 0;
+            audioPlayer.play();
+          } else {
+            playNext();
+          }
+        });
+
+        function playNext() {
+          if (queue.length > 0) {
+            const nextSong = queue.shift();
+            const songIndex = songs.findIndex((s) => s.id === nextSong.id);
+            loadSong(songIndex);
+            updateQueue();
+            saveQueue();
+          }
+        }
+
+        function similarityScore(song, current) {
+          let score = 0;
+
+          // Genre & Language are categorical
+          if (song.genre !== current.genre) score += 2;
+          if (song.language !== current.language) score += 2;
+
+          // Mood and Tempo are continuous (scale 1-10)
+          const moodDiff = Math.abs(
+            (+moodScale[song.mood] || 5) - (+moodScale[current.mood] || 5)
+          );
+          const tempoDiff = Math.abs(
+            (+song.tempo || 5) - (+current.tempo || 5)
+          );
+
+          score += moodDiff + tempoDiff;
+
+          return score;
+        }
+
+        function shuffle() {
+          if (!audioPlayer.src || !songs.length) return;
+
+          const currentSong = songs.find(
+            (song) =>
+              currentSongName.textContent === song.name &&
+              currentArtist.textContent === song.artist
+          );
+
+          if (!currentSong) return;
+
+          const candidateSongs = songs.filter(
+            (song) => song.id !== currentSong.id
+          );
+
+          const threshold = 7;
+          const rankedSongs = candidateSongs
+            .map((song) => ({
+              song,
+              score: similarityScore(song, currentSong),
+            }))
+            .filter((entry) => entry.score <= threshold)
+            .sort((a, b) => a.score - b.score)
+            .map((entry) => entry.song);
+
+          queue = rankedSongs;
+          updateQueue();
+          saveQueue();
+        }
+
+        playBtn.addEventListener("click", () => {
+          if (audioPlayer.paused) {
+            audioPlayer.play();
+          } else {
+            audioPlayer.pause();
+          }
+        });
+
+        audioPlayer.addEventListener("play", () => {
+          playIcon.style.display = "none";
+          pauseIcon.style.display = "inline";
+        });
+
+        audioPlayer.addEventListener("pause", () => {
+          playIcon.style.display = "inline";
+          pauseIcon.style.display = "none";
+        });
+
+        nextBtn.addEventListener("click", () => playNext());
+        shuffleBtn.addEventListener("click", () => shuffle());
+
+        addSongBtn.addEventListener("click", () => {
+          importModal.style.display = "block";
+        });
+
+        closeDeleteConfirm.addEventListener("click", () => {
+          deleteConfirmModal.style.display = "none";
+          songToDeleteId = null;
+        });
+
+        cancelDeleteBtn.addEventListener("click", () => {
+          deleteConfirmModal.style.display = "none";
+          songToDeleteId = null;
+        });
+
+        confirmDeleteBtn.addEventListener("click", () => {
+          if (songToDeleteId !== null) {
+            deleteSong(songToDeleteId);
+            songToDeleteId = null;
+            deleteConfirmModal.style.display = "none";
+            showToast("Deleted", "from playlist.");
+          }
+        });
+
+        let hideTimeout;
+
+        function showOptions() {
+          clearTimeout(hideTimeout);
+          addOptions.classList.add("show");
+        }
+
+        function hideOptionsDelayed() {
+          hideTimeout = setTimeout(() => {
+            addOptions.classList.remove("show");
+          }, 8000); // hide after 5 seconds
+        }
+
+        addDropdown.addEventListener("mouseenter", showOptions);
+        addOptions.addEventListener("mouseenter", showOptions);
+
+        // Delay hide when mouse leaves button or options
+        addDropdown.addEventListener("mouseleave", hideOptionsDelayed);
+        addOptions.addEventListener("mouseleave", hideOptionsDelayed);
+
+        document
+          .getElementById("add-song-btn")
+          .addEventListener("click", () => {
+            addOptions.classList.remove("show");
+          });
+
+        document
+          .getElementById("youtube-import-btn")
+          .addEventListener("click", () => {
+            addOptions.classList.remove("show");
+          });
+
+        closeImportBtn.addEventListener(
+          "click",
+          () => (importModal.style.display = "none")
+        );
+
+        document
+          .getElementById("youtube-import-btn")
+          .addEventListener("click", () => {
+            ytInlineRow.style.display = "flex";
+            setTimeout(() => ytInlineRow.classList.add("show"), 10); // trigger animation
+            ytUrlInput.focus();
+          });
+
+        showQueueBtn.addEventListener("click", () => {
+          queueModal.style.display = "block";
+          updateQueue();
+        });
+
+        closeQueueBtn.addEventListener(
+          "click",
+          () => (queueModal.style.display = "none")
+        );
+
+        closeYoutubeRowBtn.addEventListener("click", () => {
+          ytInlineRow.classList.remove("show");
+          setTimeout(() => (ytInlineRow.style.display = "none"), 300);
+        });
+
+        clearQueueBtn.addEventListener("click", () => {
+          queue = [];
+          updateQueue();
+          saveQueue();
+        });
+
+        tempoInput.addEventListener(
+          "input",
+          () => (tempoValue.textContent = tempoInput.value)
+        );
+
+        function openAddToPlaylistModal() {
+          playlistDropdown.innerHTML = "";
+
+          const allPlaylists = JSON.parse(
+            localStorage.getItem("playlists") || "[]"
+          );
+          allPlaylists.forEach((name) => {
+            if (name !== playlistName) {
+              const option = document.createElement("option");
+              option.value = name;
+              option.textContent = name;
+              playlistDropdown.appendChild(option);
+            }
+          });
+
+          addToPlaylistModal.classList.add("show");
+        }
+
+        closeAddPlaylistModal.addEventListener("click", () => {
+          addToPlaylistModal.classList.remove("show");
+        });
+
+        confirmAddToPlaylistBtn.addEventListener("click", () => {
+          const targetPlaylist = playlistDropdown.value;
+          if (!songToCopy || !targetPlaylist) return;
+
+          const copiedSong = { ...songToCopy };
+          delete copiedSong.id; // 💡 Important fix
+          copiedSong.playlist = targetPlaylist;
+
+          const transaction = db.transaction("songs", "readwrite");
+          const store = transaction.objectStore("songs");
+          store.add(copiedSong);
+
+          transaction.oncomplete = () => {
+            addToPlaylistModal.classList.remove("show");
+            showToast(songToCopy.name, `added to "${targetPlaylist}".`);
+          };
+        });
+
+        let pendingYTSongBlob = null;
+        downloadBtn.addEventListener("click", async () => {
+          const url = document.getElementById("youtube-url").value.trim();
+          if (!url) return alert("Please enter a YouTube URL");
+
+          spinner.style.display = "inline-block";
+          downloadBtn.disabled = true;
+          try {
+            const response = await fetch("/download", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: url }),
+            });
+
+            if (!response.ok) {
+              const err = await response.json();
+              alert("Error downloading: " + (err.error || "Unknown error"));
+              return;
+            }
+
+            const rawBlob = await response.blob();
+            pendingYTSongBlob = new Blob([rawBlob], { type: "audio/mpeg" });
+
+            ytInlineRow.classList.remove("show");
+            setTimeout(() => (ytInlineRow.style.display = "none"), 300);
+
+            ytSongInput.value = "";
+            ytArtistInput.value = "";
+            ytGenre.value = "";
+            ytMood.value = "";
+            ytLanguage.value = "";
+            ytTempo.value = ytTempoValue.textContent = "5";
+            youtubeModal.style.display = "block";
+
+            document.getElementById("youtube-url").value = "";
+          } catch (err) {
+            alert("Error: " + err.message);
+            console.error(err);
+          } finally {
+            // Hide spinner and re-enable button
+            spinner.style.display = "none";
+            downloadBtn.disabled = false;
+          }
+        });
+
+        function openEditModal(song) {
+          document.getElementById("edit-song-name").value = song.name;
+          document.getElementById("edit-artist-name").value = song.artist;
+          document.getElementById("edit-genre").value = song.genre || "";
+          document.getElementById("edit-mood").value = song.mood || "";
+          document.getElementById("edit-tempo").value = song.tempo || 5;
+          document.getElementById("edit-tempo-value").textContent =
+            song.tempo || 5;
+          document.getElementById("edit-language").value = song.language || "";
+          console.log("Editing:", editModal);
+          editingSongId = song.id;
+          editModal.classList.add("show");
+        }
+
+        closeEditModal.addEventListener("click", () => {
+          editModal.classList.remove("show");
+          editingSongId = null;
+        });
+
+        saveEditBtn.addEventListener("click", () => {
+          const updated = {
+            id: editingSongId,
+            name: document.getElementById("edit-song-name").value.trim(),
+            artist: document.getElementById("edit-artist-name").value.trim(),
+            genre: document.getElementById("edit-genre").value,
+            mood: document.getElementById("edit-mood").value,
+            tempo: document.getElementById("edit-tempo").value,
+            language: document.getElementById("edit-language").value,
+          };
+
+          const transaction = db.transaction("songs", "readwrite");
+          const store = transaction.objectStore("songs");
+
+          // Get old song's file blob to preserve it
+          const request = store.get(editingSongId);
+          request.onsuccess = () => {
+            updated.file = request.result.file; // keep the original file
+            updated.playlist = request.result.playlist;
+            store.put(updated); // update in IndexedDB
+            transaction.oncomplete = () => {
+              loadSongs();
+              editModal.classList.remove("show");
+              showToast(updated.name, "edited.");
+            };
+          };
+        });
+
+        function showToast(songName, text) {
+          const toast = document.getElementById("toast");
+          toast.querySelector(".toast-title").textContent = songName;
+          toast.querySelector(".toast-sub").textContent = text;
+          toast.classList.add("show");
+          setTimeout(() => {
+            toast.classList.remove("show");
+          }, 2000);
+        }
+
+        confirmYtBtn.addEventListener("click", () => {
+          const name = ytSongInput.value.trim();
+          const artist = ytArtistInput.value.trim();
+          const genre = ytGenre.value;
+          const mood = ytMood.value;
+          const language = ytLanguage.value;
+          const tempo = ytTempo.value;
+
+          if (!name || !artist) {
+            alert("Please enter both song name and artist.");
+            return;
+          }
+
+          const song = {
+            name,
+            artist,
+            genre,
+            mood,
+            tempo,
+            language,
+            file: pendingYTSongBlob, // set earlier during fetch
+            playlist: playlistName,
+          };
+
+          saveSong(song); // use your existing saveSong function
+          youtubeModal.style.display = "none";
+          showToast(song.name, "added to playlist.");
+
+          // Optional: clear fields after adding
+          ytSongInput.value = "";
+          ytArtistInput.value = "";
+          ytGenre.value = "";
+          ytMood.value = "";
+          ytLanguage.value = "";
+          ytTempo.value = ytTempoValue.textContent = "5";
+        });
+
+        closeYtModal.addEventListener("click", () => {
+          youtubeModal.style.display = "none";
+        });
+
+        ytTempo.addEventListener("input", () => {
+          ytTempoValue.textContent = ytTempo.value;
+        });
+
+        importBtn.addEventListener("click", () => {
+          const file = fileInput.files[0];
+          const name = songNameInput.value;
+          const artist = artistNameInput.value;
+          const genre = genreSelect.value;
+          const mood = moodSelect.value;
+          const tempo = tempoInput.value;
+          const language = languageSelect.value;
+          const playlist = playlistName;
+
+          if (file && name && artist) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const blob = new Blob([e.target.result], { type: file.type });
+              const song = {
+                name,
+                artist,
+                genre,
+                mood,
+                tempo,
+                language,
+                file: blob,
+              };
+              saveSong(song);
+              showToast(song.name, "added to playlist.");
+            };
+            reader.readAsArrayBuffer(file);
+            importModal.style.display = "none";
+            fileInput.value = songNameInput.value = artistNameInput.value = "";
+            genreSelect.value = moodSelect.value = languageSelect.value = "";
+            tempoInput.value = tempoValue.textContent = "5";
+          }
+        });
+
+        openDb();
+      });
+    </script>
+  </body>
+</html>

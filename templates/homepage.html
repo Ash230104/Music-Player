@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Playlist Homepage</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #2d2d2d;
+      color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    #confirmModal .modal-content button {
+      padding: 8px 14px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #confirm-delete-btn {
+      background-color: #e57373;
+      color: white;
+    }
+
+    #cancel-delete-btn {
+      background-color: #aaa;
+      color: #2d2d2d;
+    }
+
+
+    #playlist-container {
+      width: 100%;
+      max-width: 400px;
+      background: #3a3a3a;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      display: none;
+      flex-direction: column;
+    }
+
+    .playlist-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #444;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+    }
+
+    .playlist-name {
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      flex: 1;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .playlist-name:hover {
+      transform: scale(1.02);
+    }
+
+    /* Shared styles for buttons with icons */
+    button svg {
+      vertical-align: middle;
+      margin-right: 6px;
+      stroke: currentColor;
+      fill: none;
+      pointer-events: none;
+      transition: transform 0.2s ease, stroke 0.2s ease;
+    }
+
+    .edit-btn,
+    .delete-btn,
+    #add-playlist-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    /* Hover effect for all buttons */
+    .edit-btn:hover,
+    #add-playlist-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .delete-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .edit-btn,
+    .delete-btn {
+      color: #61dafb;
+      border: none;
+      background-color: #444;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+
+    .delete-btn {
+      color: #e57373;
+      background-color: #444;
+    }
+
+    #add-playlist-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #61dafb;
+      color: #2d2d2d;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #playlistModal {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+    }
+
+    #playlistModal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: #3a3a3a;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+      text-align: center;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border-radius: 4px;
+      border: none;
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+
+    .modal-content button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #61dafb;
+      color: #2d2d2d;
+      cursor: pointer;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    #cancel-delete-btn,
+    #confirm-delete-btn {
+      padding: 10px 12px;
+      margin-left: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    #cancel-delete-btn:hover {
+      transform: scale(1.1);
+    }
+
+    #confirm-delete-btn:hover {
+      transform: scale(1.1);
+    }
+
+    #cancel-delete-btn {
+      background: #555;
+      color: white;
+    }
+
+    #save-playlist-btn:hover {
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Your Playlists</h1>
+  <div id="playlist-container"></div>
+  <button id="add-playlist-btn" title="Add New Playlist">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+
+  <div id="playlistModal">
+    <div class="modal-content">
+      <h3 id="modal-title">New Playlist</h3>
+      <input type="text" id="playlist-name-input" placeholder="Playlist name" />
+      <button id="save-playlist-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="modal">
+    <div class="modal-content" style="height: 15%">
+      <span class="close" id="close-delete-confirm">&times;</span>
+      <p>Are you sure you want to delete this playlist?</p>
+      <div style="text-align: right; margin-top: 20px">
+        <button id="cancel-delete-btn">Cancel</button>
+        <button id="confirm-delete-btn" style="background-color: crimson; color: white">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    const playlistContainer = document.getElementById("playlist-container");
+    const modal = document.getElementById("playlistModal");
+    const modalTitle = document.getElementById("modal-title");
+    const nameInput = document.getElementById("playlist-name-input");
+    const saveBtn = document.getElementById("save-playlist-btn");
+    const addBtn = document.getElementById("add-playlist-btn");
+
+    let playlistToDeleteIndex = null;
+    let playlists = [];
+
+    try {
+      const stored = JSON.parse(localStorage.getItem("playlists"));
+      if (Array.isArray(stored)) playlists = stored;
+    } catch (e) {
+      playlists = [];
+    }
+
+    let editIndex = null;
+
+    document.getElementById("close-delete-confirm").addEventListener("click", () => {
+      confirmModal.classList.remove("show");
+      nameInput.value = "";
+      editIndex = null;
+    });
+
+    function renderPlaylists() {
+      playlistContainer.innerHTML = "";
+      if (playlists.length > 0) {
+        playlistContainer.style.display = "flex";
+      } else {
+        playlistContainer.style.display = "none";
+      }
+      playlists.forEach((name, index) => {
+        const item = document.createElement("div");
+        item.className = "playlist-item";
+        item.innerHTML = `
+            <span class="playlist-name" onclick="goToPlaylist('${name}')">${name}</span>
+            <button class="edit-btn" onclick="editPlaylist(${index})" title="Edit">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+              </svg>
+            </button>
+            <button class="delete-btn" onclick="deletePlaylist(${index})" title="Delete">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-2 14H7L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4h6v2" />
+              </svg>
+            </button>`;
+        playlistContainer.appendChild(item);
+      });
+    }
+
+    function openModal(isEdit = false) {
+      modal.classList.add("show");
+      nameInput.value = isEdit ? playlists[editIndex] : "";
+      modalTitle.textContent = isEdit ? "Edit Playlist" : "New Playlist";
+    }
+
+    function closeModal() {
+      modal.classList.remove("show");
+      nameInput.value = "";
+      editIndex = null;
+    }
+
+    saveBtn.addEventListener("click", () => {
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      if (editIndex !== null) {
+        const oldName = playlists[editIndex];
+        if (name === oldName) {
+          closeModal();
+          return;
+        }
+
+        // Update songs in IndexedDB
+        const request = indexedDB.open("musicPlayerDB", 1);
+        request.onsuccess = (event) => {
+          const db = event.target.result;
+          const transaction = db.transaction("songs", "readwrite");
+          const store = transaction.objectStore("songs");
+
+          const getAllRequest = store.getAll();
+          getAllRequest.onsuccess = () => {
+            const songs = getAllRequest.result;
+            songs.forEach((song) => {
+              if (song.playlist === oldName) {
+                song.playlist = name;
+                store.put(song); // update song with new playlist name
+              }
+            });
+          };
+        };
+
+        // Update playlist name in localStorage
+        const oldSongs = localStorage.getItem(`songs-${oldName}`);
+        if (oldSongs) {
+          localStorage.setItem(`songs-${name}`, oldSongs);
+          localStorage.removeItem(`songs-${oldName}`);
+        }
+
+        playlists[editIndex] = name;
+      } else {
+        playlists.push(name);
+      }
+
+      localStorage.setItem("playlists", JSON.stringify(playlists));
+      renderPlaylists();
+      closeModal();
+    });
+
+    addBtn.addEventListener("click", () => {
+      openModal(false);
+    });
+
+    window.editPlaylist = (index) => {
+      editIndex = index;
+      openModal(true);
+    };
+
+    window.deletePlaylist = (index) => {
+      playlistToDeleteIndex = index;
+      document.getElementById("confirmModal").classList.add("show");
+    };
+
+    document.getElementById("confirm-delete-btn").addEventListener("click", () => {
+      if (playlistToDeleteIndex !== null) {
+        const name = playlists[playlistToDeleteIndex];
+
+        // Delete playlist from array
+        playlists.splice(playlistToDeleteIndex, 1);
+        localStorage.setItem("playlists", JSON.stringify(playlists));
+        renderPlaylists();
+
+        // Delete songs from IndexedDB
+        const request = indexedDB.open("musicPlayerDB", 1);
+        request.onsuccess = (event) => {
+          const db = event.target.result;
+          const transaction = db.transaction("songs", "readwrite");
+          const store = transaction.objectStore("songs");
+
+          const getAllRequest = store.getAll();
+          getAllRequest.onsuccess = () => {
+            const allSongs = getAllRequest.result;
+            allSongs.forEach((song) => {
+              if (song.playlist === name) {
+                store.delete(song.id);
+              }
+            });
+          };
+        };
+
+        playlistToDeleteIndex = null;
+        document.getElementById("confirmModal").classList.remove("show");
+      }
+    });
+
+    document.getElementById("cancel-delete-btn").addEventListener("click", () => {
+      playlistToDeleteIndex = null;
+      document.getElementById("confirmModal").classList.remove("show");
+    });
+
+
+    window.goToPlaylist = (name) => {
+      window.location.href =`/playlist?name=${encodeURIComponent(name)}`;
+    };
+
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    renderPlaylists();
+  </script>
+</body>
+
+</html>
